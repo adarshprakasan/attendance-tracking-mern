@@ -1,5 +1,5 @@
 import { useState } from "react";
-import courses from "./courseDetails";
+import courses from "../files/courseDetails.js";
 import QRCode from "qrcode";
 import "../css/courselist.css";
 
