@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   TextField,
   Button,
@@ -63,7 +63,7 @@ function LoginPage() {
 
         if (response.ok) {
           console.log("Login successful:", data);
-          navigate("/dashboard"); // Redirect to the dashboard on success
+          navigate("/courselist");
         } else {
           setApiError(data.message || "Failed to login.");
         }

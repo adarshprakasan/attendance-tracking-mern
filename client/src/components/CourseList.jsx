@@ -5,7 +5,7 @@ import "../css/courselist.css";
 
 function CourseList() {
   //   let [url, setUrl] = useState("");
-  let url = "12667/22-11-2024/student";
+  let url = "12667/25-11-2024/student";
   let [qrcode, setQrcode] = useState("");
   let [showImage, setShowImage] = useState(false);
 
