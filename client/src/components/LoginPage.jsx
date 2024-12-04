@@ -68,7 +68,7 @@ function LoginPage() {
           setApiError(data.message || "Failed to login.");
         }
       } catch (error) {
-        setApiError("Network error. Please try again.");
+        setApiError("Network error. Please try again.", error);
       } finally {
         setLoading(false);
       }
@@ -84,13 +84,14 @@ function LoginPage() {
       container
       alignItems="center"
       justifyContent="center"
-      style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}
+      style={{ minHeight: "100vh", backgroundColor: "#0d1117" }}
     >
       <Box
         component="form"
         sx={{
           p: 4,
-          backgroundColor: "white",
+          bgcolor: "#151b23",
+          color: "white",
           borderRadius: 2,
           boxShadow: 3,
           width: "100%",
@@ -115,6 +116,29 @@ function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             error={!!emailError}
             helperText={emailError}
+            sx={{
+              mb: 2,
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputBase-input": {
+                color: "white",
+              },
+              "& .MuiFormLabel-root": {
+                color: "white",
+              },
+              "& .MuiFormHelperText-root": {
+                color: "white",
+              },
+            }}
           />
         </Box>
         <Box sx={{ mb: 2 }}>
@@ -140,23 +164,66 @@ function LoginPage() {
                 </InputAdornment>
               ),
             }}
+            sx={{
+              mb: 2,
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "white",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "white",
+                },
+              },
+              "& .MuiInputBase-input": {
+                color: "white",
+              },
+              "& .MuiFormLabel-root": {
+                color: "white",
+              },
+              "& .MuiFormHelperText-root": {
+                color: "white",
+              },
+            }}
           />
         </Box>
         <Button
           variant="contained"
           color="primary"
           fullWidth
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+            bgcolor: "green",
+            "&:hover": {
+              bgcolor: "#004600",
+              color: "white",
+            },
+          }}
           onClick={handleLogin}
           disabled={loading}
         >
           {loading ? <CircularProgress size={24} /> : "Login"}
         </Button>
+        <Box sx={{ mb: 2 }}>
+          <hr />
+        </Box>
         <Button
           variant="outlined"
           color="secondary"
           fullWidth
           onClick={() => navigate("/register")}
+          sx={{
+            mb: 2,
+            bgcolor: "none",
+            border: "1px solid green",
+            color: "green",
+            "&:hover": {
+              bgcolor: "green",
+              color: "white",
+            },
+          }}
         >
           Register
         </Button>

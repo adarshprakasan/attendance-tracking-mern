@@ -5,6 +5,7 @@ import LoginPage from "./components/LoginPage.jsx";
 import RegisterPage from "./components/RegisterPage.jsx";
 import VerifyOTPPage from "./components/VerifyOTPPage.jsx";
 import CourseList from "./components/CourseList.jsx";
+import SignUp from "./components/SignUp.jsx";
 // import QRCodeScanner from "./components/QRCodeScanner.jsx";
 
 createRoot(document.getElementById("root")).render(
@@ -14,6 +15,7 @@ createRoot(document.getElementById("root")).render(
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify-otp" element={<VerifyOTPPage />} />
       <Route path="/courselist" element={<CourseList />} />
+      <Route path="/studentregistration" element={<SignUp />} />
     </Routes>
   </Router>
   //<QRCodeScanner />

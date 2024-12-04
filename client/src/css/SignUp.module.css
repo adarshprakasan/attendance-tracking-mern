@@ -1,0 +1,139 @@
+.mainContainer{
+    /* border: 2px solid red; */
+    height: 100vh;
+    background-color:#0d1117;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* flex-direction: column; */
+}
+.head_control{
+    /* border: 2px solid red; */
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+.head_control h3{
+    color: white;
+}
+
+.form_control label{
+    color: white;
+}
+.form_control{
+    margin-top: 10px;
+    border: 1px solid #151b23;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 571px;
+    width: 400px;
+    background-color: #151b23;
+    border-radius: 10px;
+    padding: 20px;
+
+}
+.form_control form{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.form_control form input{
+    height: 35px;
+    border-radius: 5px;
+    padding-left: 10px;
+    outline: none;
+    background-color: #0d1117;
+}
+.form_control form input:focus {
+    border: 1px solid rgb(11, 142, 242);
+  }
+.form_control form input{
+    width: 100%;
+    padding: 12px 20px;
+    /* margin: 8px 0; */
+    box-sizing: border-box;
+    border: 1px solid #555;
+    -webkit-transition: 0.5s;
+    transition: 0.5s;
+    outline: none;
+    color: white;
+  }
+.firstDiv{
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+}
+.form_control form button{
+    width: 100%;
+    height: 40px;
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.left_Container{
+    /* border:2px solid red; */
+    height: 500px;
+    width: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 34px;
+    border-radius: 5px;
+}
+.left_Control{
+    border: 2px solid #151b23;;
+    width: 80%;    
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    border-radius: 10px;
+cursor: pointer;
+flex-direction: column;
+transition: all;
+transition-duration: 1s;
+transition-timing-function: ease-in-out;
+transition-delay: 0s;
+}
+
+.left_Control h1{
+    font-size: 30px;
+}
+
+.left_Control:hover{
+    background-color: #151b23;
+    
+}
+
+
+.btn_link{
+    /* border: 2px solid red; */
+    display: flex;
+    justify-content: space-evenly;
+}
+.btn_link a{
+    text-decoration: underline;
+}
+.btn_link h3{
+    color: white;
+}
+
+.errorFn{
+    /* border: 2px solid red; */
+   height: 5px;
+   color: red;
+   font-weight: 300;
+   padding-left: 5px;
+}
+.errorPwd{
+    /* border: 2px solid red; */
+    height: 15px;
+    color: red;
+    font-weight: 300;
+    padding-left: 5px;
+}
