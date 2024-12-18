@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [pwd, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,10 +41,10 @@ function LoginPage() {
       setEmailError("");
     }
 
-    if (!password) {
+    if (!pwd) {
       setPasswordError("Password is required.");
       isValid = false;
-    } else if (password.length < 6) {
+    } else if (pwd.length < 6) {
       setPasswordError("Password must be at least 6 characters.");
       isValid = false;
     } else {
@@ -54,10 +54,10 @@ function LoginPage() {
     if (isValid) {
       try {
         setLoading(true);
-        const response = await fetch("https://mock-api.com/login", {
+        let response = await fetch("http://localhost:5000/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email, pwd }),
         });
         const data = await response.json();
 
@@ -148,7 +148,7 @@ function LoginPage() {
             type={showPassword ? "text" : "password"}
             variant="outlined"
             fullWidth
-            value={password}
+            value={pwd}
             onChange={(e) => setPassword(e.target.value)}
             error={!!passwordError}
             helperText={passwordError}

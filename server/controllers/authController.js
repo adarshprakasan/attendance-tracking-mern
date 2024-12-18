@@ -1,6 +1,9 @@
 const User = require("../models/User");
 const transporter = require("../config/email");
 require("dotenv").config();
+const SignUpUser = require("../models/SignupUser");
+const LoginUser = require("../models/LoginUser");
+let bcrypt = require("bcrypt");
 
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -30,15 +33,11 @@ const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-
     const otp = generateOTP();
     const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
-
     const newUser = new User({ email, otp, otpExpires });
     await newUser.save();
-
     sendOTPEmail(email, otp);
-
     res.status(200).json({ message: "OTP sent to your email" });
   } catch (err) {
     res
@@ -49,7 +48,6 @@ const register = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
-
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -72,4 +70,60 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-module.exports = { register, verifyOTP };
+// ! signUp form
+
+let SignUpUserData = async (req, res) => {
+  const { fn, email, pwd, ln, number } = req.body;
+  // console.log({ fn, email, pwd });
+
+  if (!fn || !email || !pwd) {
+    return res.status(400).json({ message: "All fields are mandatory" });
+  }
+
+  try {
+    let hashedPassword = await bcrypt.hash(pwd, 10);
+    const newUser = await SignUpUser.create({
+      fn,
+      email,
+      ln,
+      number,
+      pwd: hashedPassword,
+    });
+    // await newUser.save()
+    res.status(201).json({ message: "User registered successfully!" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error while registering", error: error.message });
+  }
+};
+
+// ! login ============
+
+let LoginUserData = async (req, res) => {
+  let { email, pwd } = req.body;
+
+  if (!email || !pwd) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const user = await SignUpUser.findOne({ email: email });
+    console.log({ user });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let isMatch = await bcrypt.compare(pwd, user.pwd);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    res.status(200).json({ message: "Login successfully!" });
+  } catch (err) {
+    res.status(500).json({ message: "Error during login", error: err.message });
+  }
+};
+module.exports = { register, verifyOTP, SignUpUserData, LoginUserData };

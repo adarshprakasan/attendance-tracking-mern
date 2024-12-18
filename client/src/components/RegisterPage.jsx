@@ -48,11 +48,9 @@ function RegisterPage() {
       if (response.ok) {
         navigate("/verify-otp", { state: { email } });
       } else {
-        // setApiError(data.message || "An error occurred.");
         toast.error(data.message || "An error occurred.");
       }
     } catch (error) {
-      // setApiError("Network error, please try again.", error);
       toast.error("Network error, please try again.", error);
     } finally {
       setLoading(false);
