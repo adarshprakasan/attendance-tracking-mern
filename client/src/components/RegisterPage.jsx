@@ -93,26 +93,16 @@ function RegisterPage() {
             helperText={emailError}
             fullWidth
             sx={{
-              mb: 2,
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
               "& .MuiOutlinedInput-root": {
                 "& fieldset": {
                   borderColor: "white",
                 },
                 "&:hover fieldset": {
-                  borderColor: "white",
+                  borderColor: "#4caf50",
                 },
-                "&.Mui-focused fieldset": {
-                  borderColor: "white",
-                },
-              },
-              "& .MuiInputBase-input": {
-                color: "white",
-              },
-              "& .MuiFormLabel-root": {
-                color: "white",
-              },
-              "& .MuiFormHelperText-root": {
-                color: "white",
               },
             }}
           />

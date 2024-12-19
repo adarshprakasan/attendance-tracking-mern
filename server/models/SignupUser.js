@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const signupUserSchema = new mongoose.Schema({
+  admno: { type: String, required: true },
   fn: { type: String, required: true },
   ln: { type: String, required: true },
   number: { type: Number, required: true },

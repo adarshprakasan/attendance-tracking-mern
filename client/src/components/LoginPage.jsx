@@ -62,8 +62,12 @@ function LoginPage() {
         const data = await response.json();
 
         if (response.ok) {
-          console.log("Login successful:", data);
-          navigate("/courselist");
+          if (data.batchcode) {
+            console.log("Login successful:", data);
+            navigate("/courselist");
+          } else {
+            navigate("/batchcode");
+          }
         } else {
           setApiError(data.message || "Failed to login.");
         }
@@ -117,26 +121,16 @@ function LoginPage() {
             error={!!emailError}
             helperText={emailError}
             sx={{
-              mb: 2,
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
               "& .MuiOutlinedInput-root": {
                 "& fieldset": {
                   borderColor: "white",
                 },
                 "&:hover fieldset": {
-                  borderColor: "white",
+                  borderColor: "#4caf50",
                 },
-                "&.Mui-focused fieldset": {
-                  borderColor: "white",
-                },
-              },
-              "& .MuiInputBase-input": {
-                color: "white",
-              },
-              "& .MuiFormLabel-root": {
-                color: "white",
-              },
-              "& .MuiFormHelperText-root": {
-                color: "white",
               },
             }}
           />
@@ -165,26 +159,16 @@ function LoginPage() {
               ),
             }}
             sx={{
-              mb: 2,
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
               "& .MuiOutlinedInput-root": {
                 "& fieldset": {
                   borderColor: "white",
                 },
                 "&:hover fieldset": {
-                  borderColor: "white",
+                  borderColor: "#4caf50",
                 },
-                "&.Mui-focused fieldset": {
-                  borderColor: "white",
-                },
-              },
-              "& .MuiInputBase-input": {
-                color: "white",
-              },
-              "& .MuiFormLabel-root": {
-                color: "white",
-              },
-              "& .MuiFormHelperText-root": {
-                color: "white",
               },
             }}
           />

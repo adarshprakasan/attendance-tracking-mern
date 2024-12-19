@@ -1,12 +1,26 @@
 import { useState } from "react";
-import Style2 from "../css/SignUp.module.css";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
+import {
+  AddCommentOutlined,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 
 const SignUp = () => {
-  let [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     fn: "",
     ln: "",
     email: "",
@@ -14,202 +28,346 @@ const SignUp = () => {
     cPwd: "",
     number: "",
   });
-  let navigate = useNavigate()
-  let [errors, setError] = useState({});
-  let handleSubmit = async (e) => {
-    e.preventDefault();
-    if (
-      formData.fn == "" ||
-      formData.ln == "" ||
-      formData.email == "" ||
-      formData.number == "" ||
-      formData.pwd == "" ||
-      formData.cPwd == ""
-    ) {
-      toast.error("Error! Something went wrong.");
-    } else if (formData.pwd !== formData.cPwd) {
-      toast.info("Error! password does not matched");
-    } else {
-      await axios.post("http://localhost:5000/api/auth/signup", formData);
-      toast.success("Success! account created successfully.");
-     setTimeout(()=>{
-      navigate('/')
-     }, 3000)
-    }
-    setFormData({ fn: "", ln: "", email: "", pwd: "", cPwd: "", number: "" });
-    setError(validForm(formData));
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
-  let updateEmpData = (e) => {
-    let { name, value } = e.target;
+  const updateEmpData = (e) => {
+    const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  //  ! Validation for email
-  let IsemailValid = (email) => {
+  const validateForm = (formData) => {
+    const errors = {};
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-  };
-
-  // ! Validation for password
-  let IsPasswordValid = (pwd) => {
     const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,32}$/;
-    return passwordRegex.test(pwd);
-  };
+    const numberRegex = /^\d{10}$/;
 
-  // ! Validation for number
-  let isValidNumber = (number) => {
-    let numberRegx = /^\d{10}$/;
-    return numberRegx.test(number);
-  };
-
-  let validForm = (formData) => {
-    // console.log(formData);
-    let errors = {};
-    if (!formData.fn) {
-      errors.fn = "FirstName is required";
-    }
-
-    if (!formData.ln) {
-      errors.ln = "LastName is required";
-    }
-
-    if (!formData.number) {
-      errors.number = "Number is required";
-    } else if (!isValidNumber(formData.number)) {
-      errors.number = "Number must be 10digit";
-    }
-
+    if (!formData.fn) errors.fn = "First Name is required.";
+    if (!formData.ln) errors.ln = "Last Name is required.";
     if (!formData.email) {
-      errors.email = "email is required";
-    } else if (!IsemailValid(formData.email)) {
-      errors.email = "Email is not valid";
+      errors.email = "Email is required.";
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = "Email is not valid.";
     }
-
+    if (!formData.number) {
+      errors.number = "Mobile number is required.";
+    } else if (!numberRegex.test(formData.number)) {
+      errors.number = "Number must be 10 digits.";
+    }
     if (!formData.pwd) {
-      errors.pwd = "password is required";
-    } else if (!IsPasswordValid(formData.pwd)) {
+      errors.pwd = "Password is required.";
+    } else if (!passwordRegex.test(formData.pwd)) {
       errors.pwd =
-        "password should have one cap letter, small leter, number and must 10digit";
+        "Password must include a capital letter, a small letter, a number, and be 8-32 characters long.";
     }
-
     if (!formData.cPwd) {
-      errors.cPwd = "confirm password is required";
-    } else if (!IsPasswordValid(formData.cPwd)) {
-      errors.cPwd = "password is not valid";
+      errors.cPwd = "Confirm password is required.";
     } else if (formData.pwd !== formData.cPwd) {
-      errors.cPwd = "Password does not matched";
+      errors.cPwd = "Passwords do not match.";
     }
 
     return errors;
   };
 
+  function generateCustomId() {
+    const prefix = "STUDENT-";
+    const randomPart = uuidv4().slice(0, 4); // You can choose any length here
+    return prefix + randomPart;
+  }
+
+  let admno = generateCustomId();
+
+  const formDataWithAdmno = {
+    ...formData,
+    admno, // add admno here
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errors = validateForm(formData);
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
+      toast.error("Error! Please check your inputs.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(
+        "http://localhost:5000/api/auth/signup",
+        formDataWithAdmno
+      );
+      toast.success("Success! Account created successfully.");
+      setTimeout(() => navigate("/"), 3000);
+      setFormData({
+        admno: { admno },
+        fn: "",
+        ln: "",
+        email: "",
+        pwd: "",
+        cPwd: "",
+        number: "",
+      });
+      setErrors({});
+    } catch (error) {
+      toast.error("Error! Unable to create an account.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <section className={Style2.mainContainer}>
-      <div className={Style2.left_Container}>
-        <div className={Style2.left_Control}>
-          <h1>HRM_TECH</h1>
-          <h5>Welcome to HRM</h5>
-        </div>
-      </div>
-      <div>
-        <div className={Style2.head_control}>
-          <h3>SignUp in to HRM_TECH</h3>
-        </div>
-        <div className={Style2.form_control}>
-          <form action="" onSubmit={handleSubmit}>
-            <div className={Style2.firstDiv}>
-              <label htmlFor="">First Name</label>
-              <input
-                type="text"
-                name="fn"
-                value={formData.fn}
-                onChange={updateEmpData}
-              />
-              <aside className={Style2.errorFn}>
-                {errors.fn && <div>{errors.fn}</div>}
-              </aside>
-            </div>
-            <div className={Style2.firstDiv}>
-              <label htmlFor="">Last Name</label>
-              <input
-                type="text"
-                name="ln"
-                value={formData.ln}
-                onChange={updateEmpData}
-              />
-              <aside className={Style2.errorFn}>
-                {errors.ln && <div>{errors.ln}</div>}
-              </aside>
-            </div>
-            <div className={Style2.firstDiv}>
-              <label htmlFor="">Mob</label>
-              <input
-                type="tel"
-                name="number"
-                value={formData.number}
-                onChange={updateEmpData}
-              />
-              <aside className={Style2.errorFn}>
-                {errors.number && <div>{errors.number}</div>}
-              </aside>
-            </div>
-            <div className={Style2.firstDiv}>
-              <label htmlFor="">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={updateEmpData}
-              />
-              <aside className={Style2.errorFn}>
-                {errors.email && <div>{errors.email}</div>}
-              </aside>
-            </div>
-            <div className={Style2.firstDiv}>
-              <label htmlFor="">Password</label>
-              <input
-                type="password"
-                name="pwd"
-                value={formData.pwd}
-                onChange={updateEmpData}
-              />
-              <aside className={Style2.errorPwd}>
-                {errors.pwd && <div>{errors.pwd}</div>}
-              </aside>
-            </div>
-            <div className={Style2.firstDiv}>
-              <label htmlFor="">Confirm Password</label>
-              <input
-                type="password"
-                name="cPwd"
-                value={formData.cPwd}
-                onChange={updateEmpData}
-              />
-              <aside className={Style2.errorFn}>
-                {errors.cPwd && <div>{errors.cPwd}</div>}
-              </aside>
-            </div>
-            <div>
-              <button>CREATE ACCOUNT</button>
-            </div>
-            <div className={Style2.btn_link}>
-              <h3>Have already an account?</h3> <Link to="/">Login here</Link>
-            </div>
-          </form>
-        </div>
-        {/* ToastContainer to display notifications */}
-        <ToastContainer
-          position="top-right"
-          autoClose={5000} // Time before toast auto-closes (in ms)
-          hideProgressBar={true}
-          newestOnTop={false}
-          closeOnClick={true}
-          pauseOnHover={true}
-          draggable = {true}
-        />
-      </div>
-    </section>
+    <Box
+      sx={{
+        height: "100vh",
+        backgroundColor: "#0d1117",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Box
+        sx={{
+          height: "150px",
+          width: "350px",
+          marginRight: "30px",
+          backgroundColor: "#1A202C",
+          borderRadius: "10px",
+          padding: "20px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          color: "white",
+          transition: "transform 0.3s",
+          "&:hover": {
+            transform: "scale(1.05)",
+          },
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{ fontSize: "30px", color: "green", mb: 2 }}
+        >
+          HRM_TECH
+        </Typography>
+        <Typography variant="subtitle1" sx={{ color: "#D3D3D3" }}>
+          Welcome to HRM
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          height: "650px",
+          width: "400px",
+          backgroundColor: "#1A202C",
+          borderRadius: "10px",
+          padding: "25px",
+          border: "1px solid #151b23",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Typography
+          variant="h5"
+          sx={{ color: "white", textAlign: "center", marginBottom: "15px" }}
+        >
+          Sign Up to HRM_TECH
+        </Typography>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            flexGrow: 1,
+            overflowY: "auto",
+            paddingRight: "15px",
+            marginTop: "15px",
+          }}
+        >
+          <TextField
+            label="First Name"
+            name="fn"
+            value={formData.fn}
+            onChange={updateEmpData}
+            error={!!errors.fn}
+            helperText={errors.fn}
+            sx={{
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#4caf50",
+                },
+              },
+            }}
+          />
+          <TextField
+            label="Last Name"
+            name="ln"
+            value={formData.ln}
+            onChange={updateEmpData}
+            error={!!errors.ln}
+            helperText={errors.ln}
+            sx={{
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#4caf50",
+                },
+              },
+            }}
+          />
+          <TextField
+            label="Mobile Number"
+            name="number"
+            value={formData.number}
+            onChange={updateEmpData}
+            error={!!errors.number}
+            helperText={errors.number}
+            sx={{
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#4caf50",
+                },
+              },
+            }}
+          />
+          <TextField
+            label="Email Address"
+            name="email"
+            value={formData.email}
+            onChange={updateEmpData}
+            error={!!errors.email}
+            helperText={errors.email}
+            sx={{
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#4caf50",
+                },
+              },
+            }}
+          />
+          <TextField
+            label="Password"
+            name="pwd"
+            type={showPassword ? "text" : "password"}
+            value={formData.pwd}
+            onChange={updateEmpData}
+            error={!!errors.pwd}
+            helperText={errors.pwd}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handleTogglePasswordVisibility}
+                    sx={{ color: "white" }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#4caf50",
+                },
+              },
+            }}
+          />
+          <TextField
+            label="Confirm Password"
+            name="cPwd"
+            type={showPassword ? "text" : "password"}
+            value={formData.cPwd}
+            onChange={updateEmpData}
+            error={!!errors.cPwd}
+            helperText={errors.cPwd}
+            sx={{
+              marginBottom: "20px",
+              input: { color: "white" },
+              label: { color: "white" },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "white",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#4caf50",
+                },
+              },
+            }}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{
+              mb: 2,
+              bgcolor: "green",
+              "&:hover": {
+                bgcolor: "#004600",
+                color: "white",
+              },
+            }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : "Register"}
+          </Button>
+        </form>
+        <Typography
+          variant="body2"
+          sx={{
+            marginBottom: "20px",
+            input: { color: "white" },
+            label: { color: "white" },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "white",
+              },
+              "&:hover fieldset": {
+                borderColor: "#4caf50",
+              },
+            },
+          }}
+        >
+          Already have an account? <Link to="/">Login</Link>
+        </Typography>
+      </Box>
+      <ToastContainer position="top-right" autoClose={5000} />
+    </Box>
   );
 };
 

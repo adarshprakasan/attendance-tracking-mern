@@ -73,8 +73,8 @@ const verifyOTP = async (req, res) => {
 // ! signUp form
 
 let SignUpUserData = async (req, res) => {
-  const { fn, email, pwd, ln, number } = req.body;
-  // console.log({ fn, email, pwd });
+  const { admno, fn, email, pwd, ln, number } = req.body;
+  console.log({ admno, fn, email, pwd });
 
   if (!fn || !email || !pwd) {
     return res.status(400).json({ message: "All fields are mandatory" });
@@ -83,6 +83,7 @@ let SignUpUserData = async (req, res) => {
   try {
     let hashedPassword = await bcrypt.hash(pwd, 10);
     const newUser = await SignUpUser.create({
+      admno,
       fn,
       email,
       ln,
