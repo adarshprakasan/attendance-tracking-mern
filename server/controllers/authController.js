@@ -4,6 +4,7 @@ require("dotenv").config();
 const SignUpUser = require("../models/SignupUser");
 const LoginUser = require("../models/LoginUser");
 let bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -118,10 +119,18 @@ let LoginUserData = async (req, res) => {
 
     let isMatch = await bcrypt.compare(pwd, user.pwd);
 
+    let token = jwt.sign(
+      {
+        email: user.email,
+        name: user.fn,
+      },
+      process.env.JWT_SECRET
+    );
+
+    console.log(token);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
     res.status(200).json({ message: "Login successfully!" });
   } catch (err) {
     res.status(500).json({ message: "Error during login", error: err.message });
