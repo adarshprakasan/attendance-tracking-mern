@@ -62,7 +62,8 @@ function LoginPage() {
         const data = await response.json();
 
         if (response.ok) {
-          if (data.batchcode) {
+          localStorage.setItem("token", data.token);
+          if (data) {
             console.log("Login successful:", data);
             navigate("/courselist");
           } else {

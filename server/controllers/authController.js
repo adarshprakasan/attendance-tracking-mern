@@ -1,31 +1,14 @@
 const User = require("../models/User");
 const transporter = require("../config/email");
-require("dotenv").config();
 const SignUpUser = require("../models/SignupUser");
 const LoginUser = require("../models/LoginUser");
-let bcrypt = require("bcrypt");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { generateNextAdmno } = require("../utils/admno");
+require("dotenv").config();
 
-const generateOTP = () =>
-  Math.floor(100000 + Math.random() * 900000).toString();
-
-const sendOTPEmail = (email, otp) => {
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log("Error sending email:", error);
-    } else {
-      console.log("OTP sent:", info.response);
-    }
-  });
-};
-
+//^=====================================================================
+//! REGISTER
 const register = async (req, res) => {
   const { email } = req.body;
 
@@ -47,6 +30,32 @@ const register = async (req, res) => {
   }
 };
 
+//^=====================================================================
+//! GENERATE OTP
+const generateOTP = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
+
+//^=====================================================================
+//! SEND OTP
+const sendOTPEmail = (email, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Your OTP Code",
+    text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log("Error sending email:", error);
+    } else {
+      console.log("OTP sent:", info.response);
+    }
+  });
+};
+
+//^=====================================================================
+//! VERIFY OTP
 const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
   try {
@@ -71,39 +80,61 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// ! signUp form
-
+//^=====================================================================
+//! SIGN UP FORM
 let SignUpUserData = async (req, res) => {
-  const { admno, fn, email, pwd, ln, number } = req.body;
-  console.log({ admno, fn, email, pwd });
+  const { fn, email, pwd, ln, number } = req.body;
 
+  // Validate required fields
   if (!fn || !email || !pwd) {
     return res.status(400).json({ message: "All fields are mandatory" });
   }
 
   try {
-    let hashedPassword = await bcrypt.hash(pwd, 10);
+    // Check if email already exists
+    const existingUser = await SignUpUser.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "Email is already registered" });
+    }
+
+    // Generate the next admission number
+    const nextAdmno = await generateNextAdmno();
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(pwd, 10);
+
+    // Create the new user
     const newUser = await SignUpUser.create({
-      admno,
+      admno: nextAdmno,
       fn,
       email,
       ln,
       number,
       pwd: hashedPassword,
     });
-    // await newUser.save()
-    res.status(201).json({ message: "User registered successfully!" });
+
+    // Respond with success
+    res.status(201).json({
+      message: "User registered successfully!",
+      user: {
+        admno: newUser.admno,
+        fn: newUser.fn,
+        email: newUser.email,
+      },
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error while registering", error: error.message });
+    console.error("Error during user registration:", error);
+    res.status(500).json({
+      message: "Error while registering",
+      error: error.message,
+    });
   }
 };
 
-// ! login ============
-
-let LoginUserData = async (req, res) => {
-  let { email, pwd } = req.body;
+//^=====================================================================
+//! LOGIN
+const LoginUserData = async (req, res) => {
+  const { email, pwd } = req.body;
 
   if (!email || !pwd) {
     return res.status(400).json({ message: "All fields are required" });
@@ -111,29 +142,33 @@ let LoginUserData = async (req, res) => {
 
   try {
     const user = await SignUpUser.findOne({ email: email });
-    console.log({ user });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let isMatch = await bcrypt.compare(pwd, user.pwd);
+    const isMatch = await bcrypt.compare(pwd, user.pwd);
 
-    let token = jwt.sign(
-      {
-        email: user.email,
-        name: user.fn,
-      },
-      process.env.JWT_SECRET
-    );
-
-    console.log(token);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    res.status(200).json({ message: "Login successfully!" });
+
+    const token = jwt.sign(
+      { admno: user.admno, email: user.email, name: `${user.fn} ${user.ln}` },
+      process.env.JWT_SECRET
+    );
+
+    return res
+      .status(200)
+      .json({ error: false, message: "Login successfully!", token });
   } catch (err) {
-    res.status(500).json({ message: "Error during login", error: err.message });
+    console.error("Login Error:", err.stack || err);
+    return res
+      .status(500)
+      .json({ message: "Error during login", error: err.message });
   }
 };
+
+//^=====================================================================
+
 module.exports = { register, verifyOTP, SignUpUserData, LoginUserData };

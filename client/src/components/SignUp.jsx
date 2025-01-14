@@ -17,7 +17,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -75,18 +75,23 @@ const SignUp = () => {
     return errors;
   };
 
-  function generateCustomId() {
-    const prefix = "STUDENT-";
-    const randomPart = uuidv4().slice(0, 4); // You can choose any length here
-    return prefix + randomPart;
-  }
+  //^=====================================================================
+  //! Generate Custom ID in FrontEnd
 
-  let admno = generateCustomId();
+  // function generateCustomId() {
+  //   const prefix = "STUDENT-";
+  //   const randomPart = uuidv4().slice(0, 5);
+  //   return prefix + randomPart;
+  // }
 
-  const formDataWithAdmno = {
-    ...formData,
-    admno, // add admno here
-  };
+  // let admno = generateCustomId();
+
+  // const formDataWithAdmno = {
+  //   ...formData,
+  //   admno,
+  // };
+
+  //^=====================================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,14 +104,10 @@ const SignUp = () => {
 
     setLoading(true);
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        formDataWithAdmno
-      );
+      await axios.post("http://localhost:5000/api/auth/signup", formData);
       toast.success("Success! Account created successfully.");
-      setTimeout(() => navigate("/"), 3000);
+      setTimeout(() => navigate("/"), 2000);
       setFormData({
-        admno: { admno },
         fn: "",
         ln: "",
         email: "",

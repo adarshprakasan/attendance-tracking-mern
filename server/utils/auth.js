@@ -7,7 +7,7 @@ let auth = async (req, resizeBy, next) => {
     if (!token || !token.startsWith("Bearer")) {
       return resizeBy
         .status(401)
-        .json({ error: true, message: "Token required" });
+        .json({ error: true, message: "Please Sign in to Continue" });
     }
     // token = token.slice(7);
     token = token.split(" ")[1];
