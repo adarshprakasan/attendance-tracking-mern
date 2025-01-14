@@ -4,6 +4,7 @@ const {
   verifyOTP,
   LoginUserData,
   SignUpUserData,
+  PhotoUpload,
 } = require("../controllers/authController");
 const auth = require("../utils/auth");
 
@@ -13,5 +14,6 @@ router.post("/register", register);
 router.post("/verify-otp", verifyOTP);
 router.post("/signup", SignUpUserData);
 router.post("/login", LoginUserData);
+router.post("/photoupload", auth, PhotoUpload);
 
 module.exports = router;

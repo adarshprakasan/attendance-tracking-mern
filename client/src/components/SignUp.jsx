@@ -76,8 +76,7 @@ const SignUp = () => {
   };
 
   //^=====================================================================
-  //! Generate Custom ID in FrontEnd
-
+  //! GENERATE CUSTOM ID IN FRONTEND
   // function generateCustomId() {
   //   const prefix = "STUDENT-";
   //   const randomPart = uuidv4().slice(0, 5);

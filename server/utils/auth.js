@@ -1,23 +1,22 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-let auth = async (req, resizeBy, next) => {
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    let token = req.headers.authorization;
-
-    if (!token || !token.startsWith("Bearer")) {
-      return resizeBy
-        .status(401)
-        .json({ error: true, message: "Please Sign in to Continue" });
-    }
-    // token = token.slice(7);
-    token = token.split(" ")[1];
-
-    let decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { email: decodedToken.email };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
     next();
   } catch (err) {
-    next(err);
+    return res.status(403).json({ message: "Invalid token" });
   }
 };
 
-module.exports = auth;
+module.exports = verifyToken;

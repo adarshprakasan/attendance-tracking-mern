@@ -170,5 +170,47 @@ const LoginUserData = async (req, res) => {
 };
 
 //^=====================================================================
+//! PHOTO UPLOAD
+const PhotoUpload = async (req, res) => {
+  try {
+    if (!req.user || !req.user.email) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-module.exports = { register, verifyOTP, SignUpUserData, LoginUserData };
+    const { email } = req.user;
+
+    const user = await SignUpUser.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.admno) {
+      return res.status(400).json({ message: "Admission number not found" });
+    }
+
+    // Assuming that the request body contains photoUrl and photoUploaded
+    const { photoUrl, photoUploaded } = req.body;
+
+    // Update the user document with the new photoUrl and photoUploaded status
+    user.photoUrl = photoUrl;
+    user.photoUploaded = photoUploaded;
+
+    // Save the updated user document
+    await user.save();
+
+    res.status(200).json({ admno: user.admno });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+//^=====================================================================
+
+module.exports = {
+  register,
+  verifyOTP,
+  SignUpUserData,
+  LoginUserData,
+  PhotoUpload,
+};
