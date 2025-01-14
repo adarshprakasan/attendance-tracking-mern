@@ -18,7 +18,7 @@ const UploadImage = () => {
     const fetchAdmno = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/auth/photoupload",
+          "http://localhost:5000/api/auth/update",
           {},
           {
             headers: {
@@ -31,7 +31,7 @@ const UploadImage = () => {
         setAdmno(response.data.admno);
       } catch (error) {
         console.error(
-          "Error fetching admno:",
+          "Error fetching admno",
           error.response?.data?.message || error.message
         );
       }
@@ -74,7 +74,7 @@ const UploadImage = () => {
 
       const imageUrl = uploadResponse.data.secure_url;
       await axios.post(
-        `http://localhost:5000/api/auth/photoupload/`,
+        `http://localhost:5000/api/auth/update`,
         {
           photoUploaded: true,
           photoUrl: imageUrl,
@@ -90,7 +90,7 @@ const UploadImage = () => {
       toast.success("Photo uploaded successfully!");
       setTimeout(() => navigate("/courselist"), 2000);
     } catch (error) {
-      console.error("Error uploading photo:", error.message);
+      // console.error("Error uploading photo:", error.message);
       toast.error("Error uploading photo. Please try again.");
     }
   };
