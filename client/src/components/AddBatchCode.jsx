@@ -7,6 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 const AddBatchCode = () => {
   const [batchCode, setBatchCode] = useState("");
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const handleBatchCodeChange = (e) => {
     setBatchCode(e.target.value);
@@ -16,16 +17,17 @@ const AddBatchCode = () => {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        { batchCode },
+        "http://localhost:5000/api/auth/update",
+        { batchcode: batchCode },
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
       toast.success("Batchcode added successfully.");
-      //   setTimeout(() => navigate("/"), 3000);
+      setTimeout(() => navigate("/courselist"), 2000);
     } catch (error) {
       console.error(error);
       toast.error("Error while entering batchcode");
@@ -102,5 +104,3 @@ const AddBatchCode = () => {
 };
 
 export default AddBatchCode;
-
-

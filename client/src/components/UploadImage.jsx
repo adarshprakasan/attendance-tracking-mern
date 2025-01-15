@@ -1,30 +1,48 @@
 import { useState, useEffect } from "react";
 import { Box, Paper, Typography, Button } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
 const UploadImage = () => {
-  const [admno, setAdmno] = useState(null);
-  const [photoUploaded, setPhotoUploaded] = useState(false);
+  const navigate = useNavigate();
   const [file, setFile] = useState(null);
+  const [admno, setAdmno] = useState(null);
 
-  // Fetch admno on component mount
+  const token = localStorage.getItem("token");
+
+  //^=====================================================================
+  //! FETCHING ADMNO FROM DATABASE
   useEffect(() => {
     const fetchAdmno = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/auth/signup"
+        const response = await axios.post(
+          "http://localhost:5000/api/auth/update",
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Bearer ${token}`,
+            },
+          }
         );
-        setAdmno(response.admno);
+        // console.log("admno:", response.data.admno);
+        setAdmno(response.data.admno);
       } catch (error) {
-        console.error(error);
-        toast.error("Error fetching admission number.");
+        console.error(
+          "Error fetching admno",
+          error.response?.data?.message || error.message
+        );
       }
     };
 
-    fetchAdmno();
-  }, []);
+    if (token) {
+      fetchAdmno();
+    } else {
+      console.error("Token is missing!");
+    }
+  }, [token]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -32,6 +50,8 @@ const UploadImage = () => {
     }
   };
 
+  //^=====================================================================
+  //! PHOTO UPLOAD
   const handleSubmit = async () => {
     if (!file) {
       toast.error("Please upload a photo before submitting.");
@@ -40,28 +60,37 @@ const UploadImage = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "your_upload_preset"); // Replace with your unsigned preset
-    formData.append("cloud_name", "your_cloud_name"); // Replace with your Cloudinary cloud name
+    formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_PRESET);
+    formData.append("cloud_name", import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
+    formData.append("public_id", `students/${admno}`);
 
     try {
-      // Upload photo to Cloudinary
       const uploadResponse = await axios.post(
-        `https://upload-request.cloudinary.com/dxnxtjpl3/8f0377acf93ee6e125bd51ee310c77ee`, // Replace with your Cloudinary URL
+        `https://api.cloudinary.com/v1_1/${
+          import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+        }/image/upload`,
         formData
       );
 
       const imageUrl = uploadResponse.data.secure_url;
+      await axios.post(
+        `http://localhost:5000/api/auth/update`,
+        {
+          photoUploaded: true,
+          photoUrl: imageUrl,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      // Update the database with `photoUploaded` and the image URL
-      await axios.patch(`http://localhost:5000/api/users/${admno}`, {
-        photoUploaded: true,
-        photoUrl: imageUrl, // Save the Cloudinary image URL to the database
-      });
-
-      toast.success("Photo uploaded and status updated successfully!");
-      setPhotoUploaded(true);
+      toast.success("Photo uploaded successfully!");
+      setTimeout(() => navigate("/courselist"), 2000);
     } catch (error) {
-      console.error(error);
+      // console.error("Error uploading photo:", error.message);
       toast.error("Error uploading photo. Please try again.");
     }
   };

@@ -85,25 +85,22 @@ const verifyOTP = async (req, res) => {
 let SignUpUserData = async (req, res) => {
   const { fn, email, pwd, ln, number } = req.body;
 
-  // Validate required fields
   if (!fn || !email || !pwd) {
     return res.status(400).json({ message: "All fields are mandatory" });
   }
 
   try {
-    // Check if email already exists
     const existingUser = await SignUpUser.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ message: "Email is already registered" });
+      return res
+        .status(409)
+        .json({ message: "User already exists. Please Login" });
     }
 
-    // Generate the next admission number
     const nextAdmno = await generateNextAdmno();
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(pwd, 10);
 
-    // Create the new user
     const newUser = await SignUpUser.create({
       admno: nextAdmno,
       fn,
@@ -113,7 +110,6 @@ let SignUpUserData = async (req, res) => {
       pwd: hashedPassword,
     });
 
-    // Respond with success
     res.status(201).json({
       message: "User registered successfully!",
       user: {
@@ -123,7 +119,7 @@ let SignUpUserData = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error during user registration:", error);
+    // console.error("Error during user registration:", error);
     res.status(500).json({
       message: "Error while registering",
       error: error.message,
@@ -158,9 +154,12 @@ const LoginUserData = async (req, res) => {
       process.env.JWT_SECRET
     );
 
-    return res
-      .status(200)
-      .json({ error: false, message: "Login successfully!", token });
+    return res.status(200).json({
+      error: false,
+      message: "Login successfully!",
+      token,
+      batchcode: user.batchcode,
+    });
   } catch (err) {
     console.error("Login Error:", err.stack || err);
     return res
@@ -170,5 +169,52 @@ const LoginUserData = async (req, res) => {
 };
 
 //^=====================================================================
+//! UPDATE SCHEMA
+const UpdateSchema = async (req, res) => {
+  try {
+    if (!req.user || !req.user.email) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-module.exports = { register, verifyOTP, SignUpUserData, LoginUserData };
+    const { email } = req.user;
+
+    const user = await SignUpUser.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.admno) {
+      return res.status(400).json({ message: "Admission number not found" });
+    }
+
+    //Uploading Photo and Updating Batchcode
+    const { photoUrl, photoUploaded, batchcode } = req.body;
+
+    if (photoUrl !== undefined) user.set("photoUrl", photoUrl);
+    if (photoUploaded !== undefined) user.set("photoUploaded", photoUploaded);
+    if (batchcode !== undefined) user.set("batchcode", batchcode);
+
+    await user.save();
+
+    res
+      .status(200)
+      .json({
+        admno: user.admno,
+        batchcode: user.batchcode,
+        photoUploaded: user.photoUploaded,
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+//^=====================================================================
+
+module.exports = {
+  register,
+  verifyOTP,
+  SignUpUserData,
+  LoginUserData,
+  UpdateSchema,
+};

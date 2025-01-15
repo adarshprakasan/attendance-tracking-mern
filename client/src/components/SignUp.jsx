@@ -75,24 +75,6 @@ const SignUp = () => {
     return errors;
   };
 
-  //^=====================================================================
-  //! Generate Custom ID in FrontEnd
-
-  // function generateCustomId() {
-  //   const prefix = "STUDENT-";
-  //   const randomPart = uuidv4().slice(0, 5);
-  //   return prefix + randomPart;
-  // }
-
-  // let admno = generateCustomId();
-
-  // const formDataWithAdmno = {
-  //   ...formData,
-  //   admno,
-  // };
-
-  //^=====================================================================
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm(formData);
