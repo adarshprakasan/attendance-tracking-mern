@@ -154,14 +154,12 @@ const LoginUserData = async (req, res) => {
       process.env.JWT_SECRET
     );
 
-    return res
-      .status(200)
-      .json({
-        error: false,
-        message: "Login successfully!",
-        token,
-        batchcode: user.batchcode,
-      });
+    return res.status(200).json({
+      error: false,
+      message: "Login successfully!",
+      token,
+      batchcode: user.batchcode,
+    });
   } catch (err) {
     console.error("Login Error:", err.stack || err);
     return res
@@ -190,20 +188,22 @@ const UpdateSchema = async (req, res) => {
       return res.status(400).json({ message: "Admission number not found" });
     }
 
-    //Uploading Photo
-    const { photoUrl, photoUploaded } = req.body;
+    //Uploading Photo and Updating Batchcode
+    const { photoUrl, photoUploaded, batchcode } = req.body;
 
-    user.photoUrl = photoUrl;
-    user.photoUploaded = photoUploaded;
-
-    //Updating Batchcode
-    const { batchcode } = req.body;
-
-    user.batchcode = batchcode;
+    if (photoUrl !== undefined) user.set("photoUrl", photoUrl);
+    if (photoUploaded !== undefined) user.set("photoUploaded", photoUploaded);
+    if (batchcode !== undefined) user.set("batchcode", batchcode);
 
     await user.save();
 
-    res.status(200).json({ admno: user.admno, batchcode: user.batchcode });
+    res
+      .status(200)
+      .json({
+        admno: user.admno,
+        batchcode: user.batchcode,
+        photoUploaded: user.photoUploaded,
+      });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

@@ -62,7 +62,7 @@ const UploadImage = () => {
     formData.append("file", file);
     formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_PRESET);
     formData.append("cloud_name", import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
-    // formData.append("public_id", `students/${admno}`);
+    formData.append("public_id", `students/${admno}`);
 
     try {
       const uploadResponse = await axios.post(

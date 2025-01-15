@@ -1,21 +1,69 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import courses from "../files/courseDetails.js";
 import QRCode from "qrcode";
 import "../css/courselist.css";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function CourseList() {
-  //   let [url, setUrl] = useState("");
-  let url = "12667/25-11-2024/student";
-  let [qrcode, setQrcode] = useState("");
-  let [showImage, setShowImage] = useState(false);
+  const navigate = useNavigate();
+  const [url, setUrl] = useState("");
+  const currentDate = new Date();
+  const formattedDate = `${currentDate.getDate()}/${
+    currentDate.getMonth() + 1
+  }/${currentDate.getFullYear()}`;
+  let [isUploaded, setIsUploaded] = useState(null);
+  const [qrcode, setQrcode] = useState("");
+  const [showImage, setShowImage] = useState(false);
+
+  const token = localStorage.getItem("token");
+
+  //^=====================================================================
+  //! FETCHING ADMNO FROM DATABASE
+  useEffect(() => {
+    const fetchAdmno = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/auth/update",
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        // console.log("admno:", response.data.admno);
+        setUrl(response.data.admno + "-" + formattedDate);
+        setIsUploaded(response.data.photoUploaded);
+        // console.log(url);
+      } catch (error) {
+        console.error(
+          "Error fetching admno",
+          error.response?.data?.message || error.message
+        );
+      }
+    };
+
+    if (token) {
+      fetchAdmno();
+    } else {
+      console.error("Token is missing!");
+    }
+  }, []);
 
   let GenerateQRCode = () => {
-    setShowImage(true);
-    QRCode.toDataURL(url, (err, url) => {
-      if (err) return console.log(err);
-      console.log(url);
-      setQrcode(url);
-    });
+    // console.log(isUploaded);
+    if (isUploaded) {
+      setShowImage(true);
+      QRCode.toDataURL(url, (err, url) => {
+        if (err) return console.log(err);
+        // console.log(url);
+        setQrcode(url);
+      });
+    } else {
+      navigate("/uploadimage");
+    }
   };
 
   let handleCloseImage = () => {
