@@ -4,9 +4,8 @@ import {
   Button,
   Box,
   Typography,
-  //   InputAdornment,
-  //   IconButton,
   CircularProgress,
+  Checkbox,
   InputLabel,
   Select,
   MenuItem,
@@ -17,20 +16,19 @@ import {
   FormHelperText,
   Radio,
 } from "@mui/material";
-// import {
-//   AddCommentOutlined,
-//   Visibility,
-//   VisibilityOff,
-// } from "@mui/icons-material";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
+import india from "../files/stateAndDistricts";
 
 const PlacementForm = () => {
   const [formData, setFormData] = useState({
-    nm: "",
+    fullname: "",
     dob: "",
     gender: "",
     aadhar: "",
@@ -41,20 +39,17 @@ const PlacementForm = () => {
     instagram: "",
     facebook: "",
     state: "",
-    address: "",
-    pstate: "",
     district: "",
+    address: "",
     pincode: "",
+    pstate: "",
+    pdistrict: "",
     paddress: "",
+    ppincode: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
 
   const updateEmpData = (e) => {
     const { name, value } = e.target;
@@ -63,49 +58,83 @@ const PlacementForm = () => {
 
   const validateForm = (formData) => {
     const errors = {};
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const passwordRegex = /^(?=.\d)(?=.[a-z])(?=.*[A-Z]).{8,32}$/;
-    const numberRegex = /^\d{10}$/;
+    const linkedInRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/i;
+    const twitterRegex =
+      /^(https?:\/\/)?(www\.)?twitter\.com\/[A-Za-z0-9_]{1,15}$/i;
+    const facebookRegex =
+      /^(https?:\/\/)?(www\.)?facebook\.com\/[A-Za-z0-9.]{5,}$/i;
+    const instagramRegex =
+      /^(https?:\/\/)?(www\.)?instagram\.com\/[A-Za-z0-9_.]+$/i;
 
-    if (!formData.fn) errors.fn = "First Name is required.";
-    if (!formData.ln) errors.ln = "Last Name is required.";
-    if (!formData.email) {
-      errors.email = "Email is required.";
-    } else if (!emailRegex.test(formData.email)) {
-      errors.email = "Email is not valid.";
+    if (!formData.fullname) errors.fullname = "Name is required.";
+    if (!formData.linkedin) {
+      errors.linkedin = "This field is required.";
+    } else if (!linkedInRegex.test(formData.linkedin)) {
+      errors.linkedin = "Enter a Valid URL.";
     }
-    if (!formData.number) {
-      errors.number = "Mobile number is required.";
-    } else if (!numberRegex.test(formData.number)) {
-      errors.number = "Number must be 10 digits.";
+    if (!formData.twitter) {
+      errors.twitter = "This field is required.";
+    } else if (!twitterRegex.test(formData.twitter)) {
+      errors.twitter = "Enter a Valid URL.";
     }
-    if (!formData.pwd) {
-      errors.pwd = "Password is required.";
-    } else if (!passwordRegex.test(formData.pwd)) {
-      errors.pwd =
-        "Password must include a capital letter, a small letter, a number, and be 8-32 characters long.";
+    if (!formData.facebook) {
+      errors.facebook = "This field is required.";
+    } else if (!facebookRegex.test(formData.facebook)) {
+      errors.facebook = "Enter a Valid URL.";
     }
-    if (!formData.cPwd) {
-      errors.cPwd = "Confirm password is required.";
-    } else if (formData.pwd !== formData.cPwd) {
-      errors.cPwd = "Passwords do not match.";
+    if (!formData.instagram) {
+      errors.instagram = "This field is required.";
+    } else if (!instagramRegex.test(formData.instagram)) {
+      errors.instagram = "Enter a Valid URL.";
     }
 
     return errors;
   };
 
-  function generateCustomId() {
-    const prefix = "STUDENT-";
-    const randomPart = uuidv4().slice(0, 4); // You can choose any length here
-    return prefix + randomPart;
-  }
+  const handleStateChange = (event, type) => {
+    const { name, value } = event.target;
 
-  let admno = generateCustomId();
-
-  const formDataWithAdmno = {
-    ...formData,
-    admno, // add admno here
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(type === "current" ? { district: "" } : { pdistrict: "" }),
+    }));
   };
+
+  const handleDistrictChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = () => {
+    setFormData((prev) => {
+      if (!prev.sameAsCurrent) {
+        return {
+          ...prev,
+          sameAsCurrent: true,
+          pstate: prev.state,
+          pdistrict: prev.district,
+          paddress: prev.address,
+          ppincode: prev.pincode,
+        };
+      } else {
+        return {
+          ...prev,
+          sameAsCurrent: false,
+          pstate: "",
+          pdistrict: "",
+          paddress: "",
+          ppincode: "",
+        };
+      }
+    });
+  };
+
+  const getDistricts = (state) =>
+    india.states.find((s) => s.state === state)?.districts || [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,15 +147,11 @@ const PlacementForm = () => {
 
     setLoading(true);
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        formDataWithAdmno
-      );
+      await axios.post("http://localhost:5000/api/auth/signup", formData);
       toast.success("Success! Account created successfully.");
       setTimeout(() => navigate("/"), 3000);
       setFormData({
-        admno: { admno },
-        nm: "",
+        fullname: "",
         dob: "",
         gender: "",
         aadhar: "",
@@ -137,11 +162,13 @@ const PlacementForm = () => {
         instagram: "",
         facebook: "",
         state: "",
-        address: "",
-        pstate: "",
         district: "",
+        address: "",
         pincode: "",
+        pstate: "",
+        pdistrict: "",
         paddress: "",
+        ppincode: "",
       });
       setErrors({});
     } catch (error) {
@@ -149,6 +176,59 @@ const PlacementForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const radiostyles = {
+    color: "white",
+    "&.Mui-checked": {
+      color: "#4caf50",
+    },
+    "& .MuiSvgIcon-root": {
+      border: "1px solid white",
+      borderRadius: "50%",
+    },
+    "&:hover .MuiSvgIcon-root": {
+      borderColor: "#4caf50",
+    },
+  };
+
+  const textFieldStyles = {
+    marginBottom: "20px",
+    input: { color: "white" },
+    label: {
+      color: "white",
+      "&.Mui-disabled": {
+        color: "rgba(255, 255, 255, 0.5)",
+      },
+    },
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "white",
+      },
+      "&:hover fieldset": {
+        borderColor: "#4caf50",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#4caf50",
+      },
+      "&.Mui-disabled": {
+        "& fieldset": {
+          borderColor: "rgba(255, 255, 255, 0.5)",
+        },
+        input: {
+          color: "rgba(255, 255, 255, 0.7)",
+        },
+      },
+    },
+    "& .MuiSelect-select": {
+      color: "white",
+    },
+    "& .MuiSelect-icon": {
+      color: "white",
+    },
+    "& .Mui-disabled .MuiSelect-select": {
+      color: "rgba(255, 255, 255, 0.5)",
+    },
   };
 
   return (
@@ -163,46 +243,45 @@ const PlacementForm = () => {
     >
       <Box
         sx={{
-          height: "650px",
-          width: "400px",
+          height: "90vh",
+          width: "80%",
+          maxWidth: "1200px",
           backgroundColor: "#1A202C",
           borderRadius: "10px",
-          padding: "25px",
+          padding: "30px",
           border: "1px solid #151b23",
           display: "flex",
           flexDirection: "column",
+          overflowY: "auto",
         }}
       >
         <Typography
           variant="h5"
-          sx={{ color: "white", textAlign: "center", marginBottom: "15px" }}
+          sx={{ color: "white", textAlign: "center", marginBottom: "20px" }}
         >
           Placement Form
         </Typography>
         <form
           onSubmit={handleSubmit}
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-            flexGrow: 1,
-            overflowY: "auto",
-            paddingRight: "15px",
-            marginTop: "15px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "30px",
           }}
         >
           <TextField
             label="Name"
             name="name"
-            value={formData.name}
+            value={formData.fullname}
             onChange={updateEmpData}
-            error={!!errors.name}
-            helperText={errors.name}
+            error={!!errors.fullname}
+            helperText={errors.fullname}
             sx={{
-              marginBottom: "20px",
+              // paddingTop: "8px",
               input: { color: "white" },
               label: { color: "white" },
               "& .MuiOutlinedInput-root": {
+                paddingTop: "8px",
                 "& fieldset": {
                   borderColor: "white",
                 },
@@ -212,8 +291,43 @@ const PlacementForm = () => {
               },
             }}
           />
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DemoContainer components={["DatePicker"]}>
+              <DatePicker
+                label="Date of Birth"
+                name="dob"
+                value={formData.dob}
+                onChange={updateEmpData}
+                error={!!errors.dob}
+                helperText={errors.dob}
+                sx={{
+                  height: "60px",
+                  width: "100%",
+                  marginBottom: "20px",
+                  paddingTop: 0,
+                  "& .MuiInputBase-root": {
+                    color: "white",
+                    borderColor: "white",
+                    paddingTop: 0,
+                    "& fieldset": {
+                      borderColor: "white",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#4caf50",
+                    },
+                  },
+                  "& .MuiSvgIcon-root": {
+                    color: "white",
+                  },
+                  "& .MuiFormLabel-root": {
+                    color: "white",
+                  },
+                }}
+              />
+            </DemoContainer>
+          </LocalizationProvider>
 
-          <TextField
+          {/* <TextField
             label="Date of Birth"
             name="dob"
             value={formData.dob}
@@ -221,7 +335,6 @@ const PlacementForm = () => {
             error={!!errors.dob}
             helperText={errors.dob}
             sx={{
-              marginBottom: "20px",
               input: { color: "white" },
               label: { color: "white" },
               "& .MuiOutlinedInput-root": {
@@ -233,21 +346,12 @@ const PlacementForm = () => {
                 },
               },
             }}
-          />
-
-          <FormControl
-            sx={{
-              marginBottom: "20px",
-              width: "100%",
-            }}
-            error={!!errors.gender}
-          >
+          /> */}
+          <FormControl error={!!errors.gender} sx={{ width: "100%" }}>
             <InputLabel
               sx={{
                 color: "white",
-                "&.Mui-focused": {
-                  color: "#4caf50", // Green color for focused label
-                },
+                "&.Mui-focused": { color: "#4caf50" },
               }}
             >
               Gender
@@ -259,14 +363,12 @@ const PlacementForm = () => {
               onChange={updateEmpData}
               sx={{
                 color: "white",
-                ".MuiOutlinedInput-notchedOutline": {
-                  borderColor: "white", // White border
-                },
+                ".MuiOutlinedInput-notchedOutline": { borderColor: "white" },
                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#4caf50", // Green border on hover
+                  borderColor: "#4caf50",
                 },
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#4caf50", // Green border when focused
+                  borderColor: "#4caf50",
                 },
               }}
             >
@@ -276,23 +378,19 @@ const PlacementForm = () => {
             </Select>
             {errors.gender && <FormHelperText>{errors.gender}</FormHelperText>}
           </FormControl>
-
           <FormControl
             component="fieldset"
+            error={!!errors.aadhar}
             sx={{
               marginBottom: "20px",
               marginLeft: "10px",
               color: "white",
             }}
-            error={!!errors.aadhar}
           >
             <FormLabel
-              component="legend"
               sx={{
                 color: "white",
-                "&.Mui-focused": {
-                  color: "#4caf50", // Green label color when focused
-                },
+                "&.Mui-focused": { color: "#4caf50" },
               }}
             >
               Do you have Aadhar card?
@@ -301,53 +399,17 @@ const PlacementForm = () => {
               name="aadhar"
               value={formData.aadhar}
               onChange={updateEmpData}
-              row // Displays radio buttons in a row
-              sx={{
-                "& .MuiFormControlLabel-label": {
-                  color: "white",
-                },
-              }}
+              row
+              sx={{ "& .MuiFormControlLabel-label": { color: "white" } }}
             >
               <FormControlLabel
                 value="yes"
-                control={
-                  <Radio
-                    sx={{
-                      color: "white", // Unselected radio color
-                      "&.Mui-checked": {
-                        color: "#4caf50", // Green color when checked
-                      },
-                      "& .MuiSvgIcon-root": {
-                        border: "1px solid white", // White border for unselected radio
-                        borderRadius: "50%", // Circular border
-                      },
-                      "&:hover .MuiSvgIcon-root": {
-                        borderColor: "#4caf50", // Green border on hover
-                      },
-                    }}
-                  />
-                }
+                control={<Radio sx={radiostyles} />}
                 label="Yes"
               />
               <FormControlLabel
                 value="no"
-                control={
-                  <Radio
-                    sx={{
-                      color: "white", // Unselected radio color
-                      "&.Mui-checked": {
-                        color: "#4caf50", // Green color when checked
-                      },
-                      "& .MuiSvgIcon-root": {
-                        border: "1px solid white", // White border for unselected radio
-                        borderRadius: "50%", // Circular border
-                      },
-                      "&:hover .MuiSvgIcon-root": {
-                        borderColor: "#4caf50", // Green border on hover
-                      },
-                    }}
-                  />
-                }
+                control={<Radio sx={radiostyles} />}
                 label="No"
               />
             </RadioGroup>
@@ -357,7 +419,6 @@ const PlacementForm = () => {
               </FormHelperText>
             )}
           </FormControl>
-
           <FormControl
             component="fieldset"
             sx={{
@@ -372,7 +433,7 @@ const PlacementForm = () => {
               sx={{
                 color: "white",
                 "&.Mui-focused": {
-                  color: "#4caf50", // Green label color when focused
+                  color: "#4caf50",
                 },
               }}
             >
@@ -382,53 +443,17 @@ const PlacementForm = () => {
               name="passport"
               value={formData.passport}
               onChange={updateEmpData}
-              row // Displays radio buttons in a row
-              sx={{
-                "& .MuiFormControlLabel-label": {
-                  color: "white",
-                },
-              }}
+              row
+              sx={{ "& .MuiFormControlLabel-label": { color: "white" } }}
             >
               <FormControlLabel
                 value="yes"
-                control={
-                  <Radio
-                    sx={{
-                      color: "white", // Unselected radio color
-                      "&.Mui-checked": {
-                        color: "#4caf50", // Green color when checked
-                      },
-                      "& .MuiSvgIcon-root": {
-                        border: "1px solid white", // White border for unselected radio
-                        borderRadius: "50%", // Circular border
-                      },
-                      "&:hover .MuiSvgIcon-root": {
-                        borderColor: "#4caf50", // Green border on hover
-                      },
-                    }}
-                  />
-                }
+                control={<Radio sx={radiostyles} />}
                 label="Yes"
               />
               <FormControlLabel
                 value="no"
-                control={
-                  <Radio
-                    sx={{
-                      color: "white", // Unselected radio color
-                      "&.Mui-checked": {
-                        color: "#4caf50", // Green color when checked
-                      },
-                      "& .MuiSvgIcon-root": {
-                        border: "1px solid white", // White border for unselected radio
-                        borderRadius: "50%", // Circular border
-                      },
-                      "&:hover .MuiSvgIcon-root": {
-                        borderColor: "#4caf50", // Green border on hover
-                      },
-                    }}
-                  />
-                }
+                control={<Radio sx={radiostyles} />}
                 label="No"
               />
             </RadioGroup>
@@ -438,7 +463,6 @@ const PlacementForm = () => {
               </FormHelperText>
             )}
           </FormControl>
-
           <FormControl
             component="fieldset"
             sx={{
@@ -453,7 +477,7 @@ const PlacementForm = () => {
               sx={{
                 color: "white",
                 "&.Mui-focused": {
-                  color: "#4caf50", // Green label color when focused
+                  color: "#4caf50",
                 },
               }}
             >
@@ -463,53 +487,17 @@ const PlacementForm = () => {
               name="pancard"
               value={formData.pancard}
               onChange={updateEmpData}
-              row // Displays radio buttons in a row
-              sx={{
-                "& .MuiFormControlLabel-label": {
-                  color: "white",
-                },
-              }}
+              row
+              sx={{ "& .MuiFormControlLabel-label": { color: "white" } }}
             >
               <FormControlLabel
                 value="yes"
-                control={
-                  <Radio
-                    sx={{
-                      color: "white", // Unselected radio color
-                      "&.Mui-checked": {
-                        color: "#4caf50", // Green color when checked
-                      },
-                      "& .MuiSvgIcon-root": {
-                        border: "1px solid white", // White border for unselected radio
-                        borderRadius: "50%", // Circular border
-                      },
-                      "&:hover .MuiSvgIcon-root": {
-                        borderColor: "#4caf50", // Green border on hover
-                      },
-                    }}
-                  />
-                }
+                control={<Radio sx={radiostyles} />}
                 label="Yes"
               />
               <FormControlLabel
                 value="no"
-                control={
-                  <Radio
-                    sx={{
-                      color: "white", // Unselected radio color
-                      "&.Mui-checked": {
-                        color: "#4caf50", // Green color when checked
-                      },
-                      "& .MuiSvgIcon-root": {
-                        border: "1px solid white", // White border for unselected radio
-                        borderRadius: "50%", // Circular border
-                      },
-                      "&:hover .MuiSvgIcon-root": {
-                        borderColor: "#4caf50", // Green border on hover
-                      },
-                    }}
-                  />
-                }
+                control={<Radio sx={radiostyles} />}
                 label="No"
               />
             </RadioGroup>
@@ -519,7 +507,6 @@ const PlacementForm = () => {
               </FormHelperText>
             )}
           </FormControl>
-
           <TextField
             label="Your Linkedin URL"
             name="linkedin"
@@ -541,7 +528,6 @@ const PlacementForm = () => {
               },
             }}
           />
-
           <TextField
             label="Your Twitter URL"
             name="twitter"
@@ -563,7 +549,6 @@ const PlacementForm = () => {
               },
             }}
           />
-
           <TextField
             label="Your Instagram URL"
             name="instagram"
@@ -585,7 +570,6 @@ const PlacementForm = () => {
               },
             }}
           />
-
           <TextField
             label="Your Facebook URL"
             name="facebook"
@@ -607,131 +591,102 @@ const PlacementForm = () => {
               },
             }}
           />
-
           <Typography
             variant="h5"
             sx={{ color: "white", textAlign: "center", marginBottom: "10px" }}
           >
             Current Address
           </Typography>
-
-          <TextField
-            label="State"
-            name="state"
-            value={formData.state}
-            onChange={updateEmpData}
-            error={!!errors.state}
-            helperText={errors.state}
-            sx={{
-              marginBottom: "20px",
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
-          />
-
-          <TextField
-            label="Address"
-            name="add"
-            value={formData.add}
-            onChange={updateEmpData}
-            error={!!errors.add}
-            helperText={errors.add}
-            sx={{
-              marginBottom: "20px",
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
-          />
-
           <Typography
             variant="h5"
             sx={{ color: "white", textAlign: "center", marginBottom: "15px" }}
           >
-            Permenent Address/Native Place Address
+            Permanent/Native Place Address
           </Typography>
+          <TextField
+            select
+            label="State"
+            name="state"
+            value={formData.state}
+            onChange={(e) => handleStateChange(e, "current")}
+            error={!!errors.state}
+            helperText={errors.state}
+            sx={textFieldStyles}
+            fullWidth
+          >
+            {india.states.map((stateObj) => (
+              <MenuItem key={stateObj.state} value={stateObj.state}>
+                {stateObj.state}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <TextField
-            label="state"
+            select
+            label="State"
             name="pstate"
             value={formData.pstate}
-            onChange={updateEmpData}
+            onChange={(e) => handleStateChange(e, "permanent")}
             error={!!errors.pstate}
             helperText={errors.pstate}
-            sx={{
-              marginBottom: "20px",
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
-          />
+            disabled={formData.sameAsCurrent}
+            sx={textFieldStyles}
+            fullWidth
+          >
+            {india.states.map((stateObj) => (
+              <MenuItem key={stateObj.state} value={stateObj.state}>
+                {stateObj.state}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <TextField
+            select
             label="District"
             name="district"
             value={formData.district}
-            onChange={updateEmpData}
+            onChange={handleDistrictChange}
             error={!!errors.district}
             helperText={errors.district}
-            sx={{
-              marginBottom: "20px",
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
-          />
+            disabled={!formData.state}
+            sx={textFieldStyles}
+            fullWidth
+          >
+            {getDistricts(formData.state).map((district) => (
+              <MenuItem key={district} value={district}>
+                {district}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <TextField
-            label="Pincode"
-            name="pincode"
-            value={formData.pincode}
-            onChange={updateEmpData}
-            error={!!errors.pincode}
-            helperText={errors.pincode}
-            sx={{
-              marginBottom: "20px",
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
-          />
+            select
+            label="District"
+            name="pdistrict"
+            value={formData.pdistrict}
+            onChange={handleDistrictChange}
+            error={!!errors.pdistrict}
+            helperText={errors.pdistrict}
+            disabled={!formData.pstate || formData.sameAsCurrent}
+            sx={textFieldStyles}
+            fullWidth
+          >
+            {getDistricts(formData.pstate).map((district) => (
+              <MenuItem key={district} value={district}>
+                {district}
+              </MenuItem>
+            ))}
+          </TextField>
 
+          <TextField
+            label="Address"
+            name="address"
+            value={formData.address}
+            onChange={updateEmpData}
+            error={!!errors.address}
+            helperText={errors.address}
+            sx={textFieldStyles}
+          />
           <TextField
             label="Address"
             name="paddress"
@@ -739,55 +694,62 @@ const PlacementForm = () => {
             onChange={updateEmpData}
             error={!!errors.paddress}
             helperText={errors.paddress}
-            sx={{
-              marginBottom: "20px",
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
+            disabled={formData.sameAsCurrent}
+            sx={textFieldStyles}
           />
-
-          <Button
-            type="submit"
-            variant="contained"
-            sx={{
-              mb: 2,
-              bgcolor: "green",
-              "&:hover": {
-                bgcolor: "#004600",
-                color: "white",
-              },
-            }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : "Save and Proceed"}
-          </Button>
+          <TextField
+            label="Pincode"
+            name="pincode"
+            value={formData.pincode}
+            onChange={updateEmpData}
+            error={!!errors.pincode}
+            helperText={errors.pincode}
+            sx={textFieldStyles}
+          />
+          <TextField
+            label="Pincode"
+            name="ppincode"
+            value={formData.ppincode}
+            onChange={updateEmpData}
+            error={!!errors.ppincode}
+            helperText={errors.ppincode}
+            disabled={formData.sameAsCurrent}
+            sx={textFieldStyles}
+          />
+          <FormControlLabel
+            sx={{ color: "white" }}
+            control={
+              <Checkbox
+                checked={formData.sameAsCurrent}
+                onChange={handleCheckboxChange}
+                sx={{
+                  color: "white",
+                  textAlign: "center",
+                  marginBottom: "10px",
+                }}
+              />
+            }
+            label="Same as Current Address"
+          />
+          <div style={{ display: "flex", justifyContent: "end" }}>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                width: "180px",
+                mb: 2,
+                bgcolor: "green",
+                "&:hover": {
+                  bgcolor: "#004600",
+                  color: "white",
+                },
+              }}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} /> : "Save and Proceed"}
+            </Button>
+          </div>
         </form>
-        <Typography
-          variant="body2"
-          sx={{
-            marginBottom: "20px",
-            input: { color: "white" },
-            label: { color: "white" },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "white",
-              },
-              "&:hover fieldset": {
-                borderColor: "#4caf50",
-              },
-            },
-          }}
-        >
-          Already have an account? <Link to="/">Login</Link>
-        </Typography>
       </Box>
       <ToastContainer position="top-right" autoClose={5000} />
     </Box>

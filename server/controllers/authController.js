@@ -187,7 +187,7 @@ const UpdateSchema = async (req, res) => {
     if (!user.admno) {
       return res.status(400).json({ message: "Admission number not found" });
     }
-
+    
     //Uploading Photo and Updating Batchcode
     const { photoUrl, photoUploaded, batchcode } = req.body;
 
@@ -197,13 +197,11 @@ const UpdateSchema = async (req, res) => {
 
     await user.save();
 
-    res
-      .status(200)
-      .json({
-        admno: user.admno,
-        batchcode: user.batchcode,
-        photoUploaded: user.photoUploaded,
-      });
+    res.status(200).json({
+      admno: user.admno,
+      batchcode: user.batchcode,
+      photoUploaded: user.photoUploaded,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

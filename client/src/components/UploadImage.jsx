@@ -19,7 +19,6 @@ const UploadImage = () => {
       try {
         const response = await axios.post(
           "http://localhost:5000/api/auth/update",
-          {},
           {
             headers: {
               "Content-Type": "application/json",
@@ -91,6 +90,7 @@ const UploadImage = () => {
       setTimeout(() => navigate("/courselist"), 2000);
     } catch (error) {
       // console.error("Error uploading photo:", error.message);
+      setTimeout(() => navigate("/courselist"), 2000);
       toast.error("Error uploading photo. Please try again.");
     }
   };
