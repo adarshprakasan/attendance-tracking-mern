@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -25,11 +25,13 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import india from "../files/stateAndDistricts";
+import dayjs from "dayjs";
 
 const PlacementForm = () => {
   const [formData, setFormData] = useState({
+    admno: "",
     fullname: "",
-    dob: "",
+    dob: dayjs(),
     gender: "",
     aadhar: "",
     passport: "",
@@ -38,22 +40,43 @@ const PlacementForm = () => {
     twitter: "",
     instagram: "",
     facebook: "",
-    state: "",
-    district: "",
-    address: "",
-    pincode: "",
-    pstate: "",
-    pdistrict: "",
-    paddress: "",
-    ppincode: "",
+    currentAddress: {
+      state: "",
+      district: "",
+      address: "",
+      pincode: "",
+    },
+    permanentAddress: {
+      state: "",
+      district: "",
+      address: "",
+      pincode: "",
+    },
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [admno, setAdmno] = useState(null);
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   const updateEmpData = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const [parent, child] = name.split(".");
+
+    if (child) {
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const validateForm = (formData) => {
@@ -67,26 +90,66 @@ const PlacementForm = () => {
       /^(https?:\/\/)?(www\.)?instagram\.com\/[A-Za-z0-9_.]+$/i;
 
     if (!formData.fullname) errors.fullname = "Name is required.";
-    if (!formData.linkedin) {
-      errors.linkedin = "This field is required.";
-    } else if (!linkedInRegex.test(formData.linkedin)) {
-      errors.linkedin = "Enter a Valid URL.";
+    if (!formData.dob) errors.dob = "Date of Birth is required.";
+    if (!formData.gender) errors.gender = "Select a gender.";
+    if (!formData.aadhar) errors.aadhar = "Please select and option.";
+    if (!formData.passport) errors.passport = "Please select and option.";
+    if (!formData.pancard) errors.pancard = "Please select and option.";
+    if (formData.linkedin && !linkedInRegex.test(formData.linkedin)) {
+      errors.linkedin = "Enter a valid LinkedIn URL.";
     }
-    if (!formData.twitter) {
-      errors.twitter = "This field is required.";
-    } else if (!twitterRegex.test(formData.twitter)) {
-      errors.twitter = "Enter a Valid URL.";
+    if (formData.twitter && !twitterRegex.test(formData.twitter)) {
+      errors.twitter = "Enter a valid Twitter URL.";
     }
-    if (!formData.facebook) {
-      errors.facebook = "This field is required.";
-    } else if (!facebookRegex.test(formData.facebook)) {
-      errors.facebook = "Enter a Valid URL.";
+    if (formData.facebook && !facebookRegex.test(formData.facebook)) {
+      errors.facebook = "Enter a valid Facebook URL.";
     }
-    if (!formData.instagram) {
-      errors.instagram = "This field is required.";
-    } else if (!instagramRegex.test(formData.instagram)) {
-      errors.instagram = "Enter a Valid URL.";
+    if (formData.instagram && !instagramRegex.test(formData.instagram)) {
+      errors.instagram = "Enter a valid Instagram URL.";
     }
+    // Validate current address
+    if (!formData.currentAddress.state)
+      errors.currentAddress = {
+        ...errors.currentAddress,
+        state: "State is required.",
+      };
+    if (!formData.currentAddress.district)
+      errors.currentAddress = {
+        ...errors.currentAddress,
+        district: "District is required.",
+      };
+    if (!formData.currentAddress.address)
+      errors.currentAddress = {
+        ...errors.currentAddress,
+        address: "Address is required.",
+      };
+    if (!formData.currentAddress.pincode)
+      errors.currentAddress = {
+        ...errors.currentAddress,
+        pincode: "Pincode is required.",
+      };
+
+    // Validate permanent address
+    if (!formData.permanentAddress.state)
+      errors.permanentAddress = {
+        ...errors.permanentAddress,
+        state: "State is required.",
+      };
+    if (!formData.permanentAddress.district)
+      errors.permanentAddress = {
+        ...errors.permanentAddress,
+        district: "District is required.",
+      };
+    if (!formData.permanentAddress.address)
+      errors.permanentAddress = {
+        ...errors.permanentAddress,
+        address: "Address is required.",
+      };
+    if (!formData.permanentAddress.pincode)
+      errors.permanentAddress = {
+        ...errors.permanentAddress,
+        pincode: "Pincode is required.",
+      };
 
     return errors;
   };
@@ -96,46 +159,77 @@ const PlacementForm = () => {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
-      ...(type === "current" ? { district: "" } : { pdistrict: "" }),
+      [type === "current" ? "currentAddress" : "permanentAddress"]: {
+        ...prev[type === "current" ? "currentAddress" : "permanentAddress"],
+        [name]: value,
+        ...(name === "state" ? { district: "" } : {}),
+      },
     }));
   };
 
-  const handleDistrictChange = (event) => {
+  const handleDistrictChange = (event, type) => {
     const { name, value } = event.target;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [type === "current" ? "currentAddress" : "permanentAddress"]: {
+        ...prev[type === "current" ? "currentAddress" : "permanentAddress"],
+        district: value,
+      },
     }));
   };
 
   const handleCheckboxChange = () => {
-    setFormData((prev) => {
-      if (!prev.sameAsCurrent) {
-        return {
-          ...prev,
-          sameAsCurrent: true,
-          pstate: prev.state,
-          pdistrict: prev.district,
-          paddress: prev.address,
-          ppincode: prev.pincode,
-        };
-      } else {
-        return {
-          ...prev,
-          sameAsCurrent: false,
-          pstate: "",
-          pdistrict: "",
-          paddress: "",
-          ppincode: "",
-        };
-      }
-    });
+    setFormData((prev) => ({
+      ...prev,
+      sameAsCurrent: !prev.sameAsCurrent,
+      permanentAddress: !prev.sameAsCurrent
+        ? { ...prev.currentAddress }
+        : { state: "", district: "", address: "", pincode: "" },
+    }));
   };
 
   const getDistricts = (state) =>
     india.states.find((s) => s.state === state)?.districts || [];
 
+  //^=====================================================================
+  //! FETCHING ADMNO FROM DATABASE
+  useEffect(() => {
+    const fetchAdmno = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/auth/update",
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("admno:", response.data.admno);
+        setAdmno(response.data.admno);
+        setFormData((prevData) => ({
+          ...prevData,
+          admno: response.data.admno,
+        }));
+      } catch (error) {
+        console.error(
+          "Error fetching admno",
+          error.response?.data?.message || error.message
+        );
+      }
+    };
+
+    if (token) {
+      fetchAdmno();
+    } else {
+      navigate("/");
+    }
+  }, [token]);
+
+  //^=====================================================================
+  //! FORM SUBMISSION
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm(formData);
@@ -147,12 +241,20 @@ const PlacementForm = () => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", formData);
-      toast.success("Success! Account created successfully.");
-      setTimeout(() => navigate("/"), 3000);
+      await axios.post(
+        "http://localhost:5000/api/auth/placementform",
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setFormData({
+        admno: admno,
         fullname: "",
-        dob: "",
+        dob: dayjs().format("YYYY-MM-DD"),
         gender: "",
         aadhar: "",
         passport: "",
@@ -161,17 +263,14 @@ const PlacementForm = () => {
         twitter: "",
         instagram: "",
         facebook: "",
-        state: "",
-        district: "",
-        address: "",
-        pincode: "",
-        pstate: "",
-        pdistrict: "",
-        paddress: "",
-        ppincode: "",
+        currentAddress: { state: "", district: "", address: "", pincode: "" },
+        permanentAddress: { state: "", district: "", address: "", pincode: "" },
       });
+      toast.success("Saved your details");
+      setTimeout(() => navigate("/education"), 2000);
       setErrors({});
     } catch (error) {
+      console.log(formData);
       toast.error("Error! Unable to create an account.");
     } finally {
       setLoading(false);
@@ -271,7 +370,7 @@ const PlacementForm = () => {
         >
           <TextField
             label="Name"
-            name="name"
+            name="fullname"
             value={formData.fullname}
             onChange={updateEmpData}
             error={!!errors.fullname}
@@ -291,6 +390,7 @@ const PlacementForm = () => {
               },
             }}
           />
+
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DemoContainer components={["DatePicker"]}>
               <DatePicker
@@ -327,26 +427,6 @@ const PlacementForm = () => {
             </DemoContainer>
           </LocalizationProvider>
 
-          {/* <TextField
-            label="Date of Birth"
-            name="dob"
-            value={formData.dob}
-            onChange={updateEmpData}
-            error={!!errors.dob}
-            helperText={errors.dob}
-            sx={{
-              input: { color: "white" },
-              label: { color: "white" },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "white",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#4caf50",
-                },
-              },
-            }}
-          /> */}
           <FormControl error={!!errors.gender} sx={{ width: "100%" }}>
             <InputLabel
               sx={{
@@ -603,11 +683,12 @@ const PlacementForm = () => {
           >
             Permanent/Native Place Address
           </Typography>
+
           <TextField
             select
             label="State"
             name="state"
-            value={formData.state}
+            value={formData.currentAddress.state}
             onChange={(e) => handleStateChange(e, "current")}
             error={!!errors.state}
             helperText={errors.state}
@@ -624,12 +705,12 @@ const PlacementForm = () => {
           <TextField
             select
             label="State"
-            name="pstate"
-            value={formData.pstate}
+            name="state"
+            value={formData.permanentAddress.state}
             onChange={(e) => handleStateChange(e, "permanent")}
             error={!!errors.pstate}
             helperText={errors.pstate}
-            disabled={formData.sameAsCurrent}
+            disabled={formData.sameAsCurrent} // Disable if "Same as Current" is checked
             sx={textFieldStyles}
             fullWidth
           >
@@ -644,15 +725,15 @@ const PlacementForm = () => {
             select
             label="District"
             name="district"
-            value={formData.district}
-            onChange={handleDistrictChange}
+            value={formData.currentAddress.district}
+            onChange={(e) => handleDistrictChange(e, "current")}
             error={!!errors.district}
             helperText={errors.district}
-            disabled={!formData.state}
             sx={textFieldStyles}
+            disabled={!formData.currentAddress.state}
             fullWidth
           >
-            {getDistricts(formData.state).map((district) => (
+            {getDistricts(formData.currentAddress.state).map((district) => (
               <MenuItem key={district} value={district}>
                 {district}
               </MenuItem>
@@ -662,16 +743,18 @@ const PlacementForm = () => {
           <TextField
             select
             label="District"
-            name="pdistrict"
-            value={formData.pdistrict}
-            onChange={handleDistrictChange}
+            name="district"
+            value={formData.permanentAddress.district}
+            onChange={(e) => handleDistrictChange(e, "permanent")}
             error={!!errors.pdistrict}
             helperText={errors.pdistrict}
-            disabled={!formData.pstate || formData.sameAsCurrent}
             sx={textFieldStyles}
+            disabled={
+              !formData.permanentAddress.state || formData.sameAsCurrent
+            }
             fullWidth
           >
-            {getDistricts(formData.pstate).map((district) => (
+            {getDistricts(formData.permanentAddress.state).map((district) => (
               <MenuItem key={district} value={district}>
                 {district}
               </MenuItem>
@@ -680,42 +763,46 @@ const PlacementForm = () => {
 
           <TextField
             label="Address"
-            name="address"
-            value={formData.address}
+            name="currentAddress.address"
+            value={formData.currentAddress.address}
             onChange={updateEmpData}
-            error={!!errors.address}
-            helperText={errors.address}
+            error={!!errors.currentAddress?.address}
+            helperText={errors.currentAddress?.address}
             sx={textFieldStyles}
           />
+
           <TextField
             label="Address"
-            name="paddress"
-            value={formData.paddress}
+            name="permanentAddress.address"
+            value={formData.permanentAddress.address}
             onChange={updateEmpData}
-            error={!!errors.paddress}
-            helperText={errors.paddress}
+            error={!!errors.permanentAddress?.address}
+            helperText={errors.permanentAddress?.address}
             disabled={formData.sameAsCurrent}
             sx={textFieldStyles}
           />
+
           <TextField
             label="Pincode"
-            name="pincode"
-            value={formData.pincode}
+            name="currentAddress.pincode"
+            value={formData.currentAddress.pincode}
             onChange={updateEmpData}
-            error={!!errors.pincode}
-            helperText={errors.pincode}
+            error={!!errors.currentAddress?.pincode}
+            helperText={errors.currentAddress?.pincode}
             sx={textFieldStyles}
           />
+
           <TextField
             label="Pincode"
-            name="ppincode"
-            value={formData.ppincode}
+            name="permanentAddress.pincode"
+            value={formData.permanentAddress.pincode}
             onChange={updateEmpData}
-            error={!!errors.ppincode}
-            helperText={errors.ppincode}
+            error={!!errors.permanentAddress?.pincode}
+            helperText={errors.permanentAddress?.pincode}
             disabled={formData.sameAsCurrent}
             sx={textFieldStyles}
           />
+
           <FormControlLabel
             sx={{ color: "white" }}
             control={

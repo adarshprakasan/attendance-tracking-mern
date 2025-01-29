@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   TextField,
   Button,
@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -64,8 +65,11 @@ function LoginPage() {
         if (response.ok) {
           localStorage.setItem("token", data.token);
           if (data.batchcode) {
-            // console.log("Login successful:", data);
-            navigate("/courselist");
+            toast.success("Logged in successfully.");
+            setTimeout(() => {
+              navigate("/", { replace: true });
+              window.location.reload();
+            }, 2000);
           } else {
             navigate("/batchcode");
           }
@@ -212,6 +216,7 @@ function LoginPage() {
         >
           Register
         </Button>
+        <ToastContainer position="top-right" autoClose={5000} />
       </Box>
     </Grid>
   );

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const transporter = require("../config/email");
 const SignUpUser = require("../models/SignupUser");
+const PlacementForm = require("../models/PlacementForm");
 const LoginUser = require("../models/LoginUser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -187,7 +188,7 @@ const UpdateSchema = async (req, res) => {
     if (!user.admno) {
       return res.status(400).json({ message: "Admission number not found" });
     }
-    
+
     //Uploading Photo and Updating Batchcode
     const { photoUrl, photoUploaded, batchcode } = req.body;
 
@@ -208,6 +209,113 @@ const UpdateSchema = async (req, res) => {
 };
 
 //^=====================================================================
+//! PLACEMENT FORM
+let PlacementFormSchema = async (req, res) => {
+  const {
+    admno,
+    fullname,
+    dob,
+    gender,
+    aadhar,
+    passport,
+    pancard,
+    linkedin,
+    twitter,
+    instagram,
+    facebook,
+    currentAddress,
+    permanentAddress,
+  } = req.body;
+
+  if (!fullname)
+    return res.status(400).json({ error: "Full name is required." });
+  if (!dob)
+    return res.status(400).json({ error: "Date of Birth is required." });
+  if (!gender) return res.status(400).json({ error: "Gender is required." });
+
+  if (!currentAddress || !currentAddress.state) {
+    return res
+      .status(400)
+      .json({ error: "Current address state is required." });
+  }
+  if (!currentAddress.district) {
+    return res
+      .status(400)
+      .json({ error: "Current address district is required." });
+  }
+  if (!currentAddress.address) {
+    return res.status(400).json({ error: "Current address is required." });
+  }
+  if (!currentAddress.pincode) {
+    return res
+      .status(400)
+      .json({ error: "Current address pincode is required." });
+  }
+
+  if (!permanentAddress || !permanentAddress.state) {
+    return res
+      .status(400)
+      .json({ error: "Permanent address state is required." });
+  }
+  if (!permanentAddress.district) {
+    return res
+      .status(400)
+      .json({ error: "Permanent address district is required." });
+  }
+  if (!permanentAddress.address) {
+    return res.status(400).json({ error: "Permanent address is required." });
+  }
+  if (!permanentAddress.pincode) {
+    return res
+      .status(400)
+      .json({ error: "Permanent address pincode is required." });
+  }
+
+  try {
+    const newPlacementForm = await PlacementForm.create({
+      admno,
+      fullname,
+      dob,
+      gender,
+      aadhar,
+      passport,
+      pancard,
+      linkedin,
+      twitter,
+      instagram,
+      facebook,
+      currentAddress: {
+        state: currentAddress.state,
+        district: currentAddress.district,
+        address: currentAddress.address,
+        pincode: currentAddress.pincode,
+      },
+      permanentAddress: {
+        state: permanentAddress.state,
+        district: permanentAddress.district,
+        address: permanentAddress.address,
+        pincode: permanentAddress.pincode,
+      },
+    });
+
+    res.status(201).json({
+      message: "Placement Form submitted successfully!",
+      user: {
+        fullname: newPlacementForm.fullname,
+        dob: newPlacementForm.dob,
+        gender: newPlacementForm.gender,
+        aadhar: newPlacementForm.aadhar,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error while submitting the placement form",
+      error: error.message,
+    });
+  }
+};
+
+//^=====================================================================
 
 module.exports = {
   register,
@@ -215,4 +323,5 @@ module.exports = {
   SignUpUserData,
   LoginUserData,
   UpdateSchema,
+  PlacementFormSchema,
 };

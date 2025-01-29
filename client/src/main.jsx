@@ -10,12 +10,15 @@ import BatchCode from "./components/BatchCode.jsx";
 import AddBatchCode from "./components/AddBatchCode.jsx";
 import UploadImage from "./components/UploadImage.jsx";
 import PlacementForm from "./components/PlacementForm.jsx";
+import Education from "./components/Education.jsx";
+import OtherDetails from "./components/OtherDetails.jsx";
 // import QRCodeScanner from "./components/QRCodeScanner.jsx";
 
+const token = localStorage.getItem("token");
 createRoot(document.getElementById("root")).render(
   <Router>
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={token ? <CourseList /> : <LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify-otp" element={<VerifyOTPPage />} />
       <Route path="/studentregistration" element={<SignUp />} />
@@ -23,7 +26,9 @@ createRoot(document.getElementById("root")).render(
       <Route path="/addbatchcode" element={<AddBatchCode />} />
       <Route path="/uploadimage" element={<UploadImage />} />
       <Route path="/placementform" element={<PlacementForm />} />
-      <Route path="/courselist" element={<CourseList />} />
+      <Route path="/education" element={<Education />} />
+      <Route path="/otherdetails" element={<OtherDetails />} />
+      {/* <Route path="/courselist" element={<CourseList />} /> */}
     </Routes>
   </Router>
   //<QRCodeScanner />

@@ -8,6 +8,7 @@ import axios from "axios";
 const UploadImage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
   const [admno, setAdmno] = useState(null);
 
   const token = localStorage.getItem("token");
@@ -19,6 +20,7 @@ const UploadImage = () => {
       try {
         const response = await axios.post(
           "http://localhost:5000/api/auth/update",
+          {},
           {
             headers: {
               "Content-Type": "application/json",
@@ -39,11 +41,18 @@ const UploadImage = () => {
     if (token) {
       fetchAdmno();
     } else {
-      console.error("Token is missing!");
+      navigate("/");
+      // console.error("Token is missing!");
     }
   }, [token]);
 
   const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFileName(file.name);
+    } else {
+      setFileName("");
+    }
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
@@ -87,10 +96,10 @@ const UploadImage = () => {
       );
 
       toast.success("Photo uploaded successfully!");
-      setTimeout(() => navigate("/courselist"), 2000);
+      setTimeout(() => navigate("/placementform"), 2000);
     } catch (error) {
       // console.error("Error uploading photo:", error.message);
-      setTimeout(() => navigate("/courselist"), 2000);
+      setTimeout(() => navigate("/placementform"), 2000);
       toast.error("Error uploading photo. Please try again.");
     }
   };
@@ -128,6 +137,7 @@ const UploadImage = () => {
           <Box
             sx={{
               display: "flex",
+              flexDirection: "column",
               justifyContent: "center",
               alignItems: "center",
               marginBottom: "20px",
@@ -159,6 +169,18 @@ const UploadImage = () => {
                 Choose File
               </Button>
             </label>
+            {fileName && (
+              <Typography
+                variant="body2"
+                sx={{
+                  marginTop: "10px",
+                  color: "#555",
+                  textAlign: "center",
+                }}
+              >
+                Selected File: {fileName}
+              </Typography>
+            )}
           </Box>
 
           <Button

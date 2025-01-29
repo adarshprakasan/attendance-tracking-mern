@@ -26,6 +26,7 @@ function CourseList() {
       try {
         const response = await axios.post(
           "http://localhost:5000/api/auth/update",
+          {},
           {
             headers: {
               "Content-Type": "application/json",
@@ -48,7 +49,8 @@ function CourseList() {
     if (token) {
       fetchAdmno();
     } else {
-      console.error("Token is missing!");
+      navigate("/");
+      // console.error("Token is missing!");
     }
   }, []);
 
@@ -73,7 +75,10 @@ function CourseList() {
   const handleLogout = () => {
     toast.success("Logged out successfully.");
     localStorage.removeItem("token");
-    setTimeout(() => navigate("/"), 1000);
+    setTimeout(() => {
+      navigate("/", { replace: true });
+      window.location.reload();
+    }, 1000);
   };
 
   return (
